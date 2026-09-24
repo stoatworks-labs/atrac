@@ -5,6 +5,12 @@
 
 namespace atrac::codec
 {
+namespace
+{
+//MSVC's <cmath> has no M_PI without _USE_MATH_DEFINES, and the first Windows CI
+//run failed on exactly that. Spelled out once, to the double.
+constexpr double kPi = 3.14159265358979323846;
+} // namespace
 
 int BlockSizeOf( int option )
 {
@@ -82,7 +88,7 @@ std::vector< double > Ramp( int L )
 {
 	std::vector< double > w( static_cast< size_t >( std::max( 0, L ) ) );
 	for( int j = 0; j < L; ++j )
-		w[ j ] = std::sin( M_PI * ( j + 0.5 ) / ( 2.0 * L ) );
+		w[ j ] = std::sin( kPi * ( j + 0.5 ) / ( 2.0 * L ) );
 	return w;
 }
 
@@ -92,7 +98,7 @@ std::vector< double > Basis( int M )
 	const double scale = std::sqrt( 2.0 / M );
 	for( int n = 0; n < 2 * M; ++n )
 		for( int k = 0; k < M; ++k )
-			table[ static_cast< size_t >( n ) * M + k ] = scale * std::cos( M_PI / M * ( n + 0.5 + M / 2.0 ) * ( k + 0.5 ) );
+			table[ static_cast< size_t >( n ) * M + k ] = scale * std::cos( kPi / M * ( n + 0.5 + M / 2.0 ) * ( k + 0.5 ) );
 	return table;
 }
 

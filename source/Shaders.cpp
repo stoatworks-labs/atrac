@@ -651,7 +651,7 @@ vec3 heat( int wl )
 	if( wl == 0 )
 		return vec3( 0.0 );
 	float t = float( wl ) / 16.0;
-	vec3 a  = vec3( 0.05, 0.05, 0.35 );
+	vec3 a  = vec3( 0.10, 0.16, 0.62 );//2 bits, the commonest word length at the default rate, must read as blue and not as black
 	vec3 b  = vec3( 0.95, 0.45, 0.05 );
 	vec3 c  = vec3( 1.0 );
 	return t < 0.5 ? mix( a, b, t * 2.0 ) : mix( b, c, t * 2.0 - 1.0 );
