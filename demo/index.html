@@ -1,0 +1,33 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Atrac — browser demo | Stoatworks Labs</title>
+    <meta name="description" content="Try the Atrac FFGL plugin for Resolume in your browser: a perceptual coder modelled on MiniDisc's ATRAC, run on the picture. The plugin's own lapped-transform, allocation, quantiser and display shaders ported to WebGL2, with its tables, shock-proof buffer and clock ported to JavaScript." />
+    <link rel="icon" href="data:," />
+    <link rel="stylesheet" href="./vendor/kit.css" />
+    <link rel="canonical" href="https://atrac-demo.stoatworks-labs.com/" />
+  </head>
+  <body>
+    <main id="demo">
+      <noscript>
+        <p>
+          This demo runs the plugin's shaders in your browser, so it needs
+          JavaScript and WebGL2. The plugin itself, its source and its downloads
+          are on
+          <a href="https://github.com/stoatworks-labs/atrac">its repository</a>.
+        </p>
+      </noscript>
+    </main>
+
+    <script type="module" src="./plugin.js"></script>
+    <script
+      src="./vendor/support-footer.js"
+      defer
+      data-app="Atrac"
+      data-repo="https://github.com/stoatworks-labs/atrac"
+      data-note="A browser demo of the plugin's shaders and a port of its tables and disc. Nothing you load here leaves your machine. ATRAC and MiniDisc are trademarks of Sony Group Corporation; this project is not affiliated with or endorsed by Sony."
+    ></script>
+  </body>
+</html>

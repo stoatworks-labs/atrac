@@ -40,6 +40,8 @@
 #   pipe          the fleet's --pipe contract: whole frames only, a cue naming
 #                 no control refused, and exit 1 -- not a silent 0, not a
 #                 SIGPIPE 141 -- on a failed render or a closed stdout.
+#   demo          the browser demo's copy of every shader snippet is still the
+#                 plugin's, character for character (demo/tools/check_shaders.py).
 #   sweep         does every control change the picture.
 #   bench         the render cost, for the record. Not pass/fail.
 #   registration  does the bundle contain a plugin at all -- a file-scope
@@ -158,6 +160,21 @@ else
 	fail "a closed stdout gave exit $status, not 1"
 fi
 rm -f "$raw" "$many" "$cues"
+
+step "demo: the browser copy of the shaders"
+# demo/plugin.js cannot include a C++ file, so it carries its own copy of every
+# GLSL snippet; the page's claim to run the plugin's own shaders rests on the
+# two staying identical, and only this check enforces it.
+if [ -f demo/tools/check_shaders.py ]; then
+	if out=$(python3 demo/tools/check_shaders.py 2>&1); then
+		pass "$( printf '%s\n' "$out" | tail -1 )"
+	else
+		fail "the demo's shaders have drifted from source/Shaders.cpp"
+		printf '%s\n' "$out" | grep -E '^FAIL' | sed 's/^/      /'
+	fi
+else
+	printf '   skipped: no demo/\n'
+fi
 
 step "sweep"
 if out=$(python3 tools/sweep.py --binary "$ACTEST" 2>/dev/null); then
