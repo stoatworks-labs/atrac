@@ -547,16 +547,19 @@ void main()
 			sf[ j ] = 0;
 	}
 
-	vec4 packed;
+	//Not `packed`: that is a reserved word in GLSL 4.10 (Mesa refuses it; Apple's
+	//compiler and glslc at 4.5 let it through), and the first Arena load on
+	//Windows failed on exactly that.
+	vec4 slots;
 	for( int c = 0; c < 4; ++c )
 	{
 		int j0 = 8 * part + 2 * c;
 		int j1 = j0 + 1;
 		int e0 = j0 < nb ? wl[ j0 ] + 32 * sf[ j0 ] : 0;
 		int e1 = j1 < nb ? wl[ j1 ] + 32 * sf[ j1 ] : 0;
-		packed[ c ] = float( e0 + 2048 * e1 );
+		slots[ c ] = float( e0 + 2048 * e1 );
 	}
-	fragColor = packed;
+	fragColor = slots;
 }
 )";
 
