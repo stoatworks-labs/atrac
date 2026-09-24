@@ -27,6 +27,38 @@ Resolume. The defaults: 0.5 bits per pixel on 16-pixel blocks, adaptive
 switching, a moderate masking model. The texture at the bottom has lost its
 grain to the budget; the dark block's edges ring.</sub>
 
+<!-- downloads:start -->
+
+## Download
+
+**[v0.1.0](https://github.com/stoatworks-labs/atrac/releases/tag/v0.1.0)** — prebuilt for macOS and Windows. Pick your platform:
+
+<details>
+<summary><b>macOS</b> — Universal (Apple Silicon + Intel)</summary>
+
+| Build | Download | Size |
+| --- | --- | --- |
+| Universal (Apple Silicon + Intel) · .dmg disk image | [`atrac-0.1.0-macos-universal.dmg`](https://github.com/stoatworks-labs/atrac/releases/download/v0.1.0/atrac-0.1.0-macos-universal.dmg) | 234 KB |
+| Universal (Apple Silicon + Intel) · .zip archive | [`atrac-macos-universal.zip`](https://github.com/stoatworks-labs/atrac/releases/latest/download/atrac-macos-universal.zip) | 193 KB |
+
+</details>
+
+<details>
+<summary><b>Windows</b> — x64</summary>
+
+| Build | Download | Size |
+| --- | --- | --- |
+| x64 · .exe installer | [`atrac-0.1.0-windows-x86_64-setup.exe`](https://github.com/stoatworks-labs/atrac/releases/download/v0.1.0/atrac-0.1.0-windows-x86_64-setup.exe) | 227 KB |
+| x64 · .zip archive | [`atrac-windows-x86_64.zip`](https://github.com/stoatworks-labs/atrac/releases/latest/download/atrac-windows-x86_64.zip) | 121 KB |
+
+</details>
+
+All builds, checksums and release notes: [github.com/stoatworks-labs/atrac/releases](https://github.com/stoatworks-labs/atrac/releases).
+
+macOS builds are signed and notarised and open normally. The Windows builds are unsigned, so SmartScreen warns once.
+
+<!-- downloads:end -->
+
 ## The one idea
 
 ATRAC does not throw detail away by resolution. It throws it away by **bits**.
