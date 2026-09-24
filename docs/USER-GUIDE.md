@@ -29,6 +29,7 @@ block's edges ring; the flat bars carry a faint block ripple.*
 > make those checks fail, and one character changed in the shipped shader is caught. All 13
 > controls are shown to change the picture. It has **never been loaded into Resolume on macOS** —
 > the one host it has run in is the fleet's own test host, `oxbow`, for 120 frames.
+> On Windows, a build of v0.1.0 loads, registers and renders in Resolume Arena 7.27.1, with every control matching what the plugin declares — on software rendering, so that says nothing about a GPU. Buffer, Read Speed and Knock Length could not be shown moving there, because they act only during a knock and the gate never presses the button; the harness measures all three.
 > Try it on a spare layer before you put it in a show.
 >
 > ATRAC and MiniDisc are trademarks of Sony Group Corporation. This project is modelled on the

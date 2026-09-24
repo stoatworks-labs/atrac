@@ -80,6 +80,18 @@ across many bands; the flat bars at the top pour them into the first few.</sub>
   of B breaks playback iff L > B, at B after the knock, and playback resumes at
   L + (B/4)/r — the harness measures both out of the picture.
 
+[![Atrac — a MiniDisc-style perceptual coder run on the picture, for Resolume](docs/video-thumb.png)](https://www.youtube.com/watch?v=AKqH_9a7YPo)
+
+*[Watch it](https://www.youtube.com/watch?v=AKqH_9a7YPo) — 55 seconds:
+texture starving and cells falling to grey as the rate drops, pre-echo on long
+blocks and short blocks confining it, Block Size 8/16/32, Show Bits filling
+outward as the budget grows, Chroma Bits to zero and back, a knock that the
+buffer absorbs and one that empties it, and the disc skipping on the beat.
+Every frame is the real plugin's output: an FFGL plugin has no window, so the
+footage is rendered by this repository's own offline harness (`actest --pipe`,
+driven by a cue sheet) rather than filmed off a screen, and the clips are
+Resolume's bundled demo media.*
+
 ## Controls
 
 | Group | |
@@ -137,8 +149,11 @@ onset detector sums flux over every bin so it does not care how they are laid
 out in frequency, but whether they are magnitudes or powers is unmeasured and
 the square root of each is an assumption inherited from the fleet — are
 untested. The masking model's slopes and offset are stated, not tuned against
-anything. Windows compiles in CI only. No OpenFX port and no browser demo, not
-in scope for 0.1.0.
+anything. On Windows it has been loaded: a build of this source loads, registers and renders in Resolume Arena 7.27.1 on software rendering (win-lab, Mesa llvmpipe, no GPU), with all 20 host controls as declared and 9 of them shown moving the picture; Buffer, Read Speed and Knock Length could not be shown there, because they act only during a knock and the gate never presses the button, and the two audio controls were skipped because that machine has no sound device. The first build failed there: `packed` is a reserved word in GLSL 4.10 and the alloc shader would not compile on Mesa, which nothing on this Mac had caught. No OpenFX port and no presets. There is a
+[user guide](https://stoatworks-labs.com/software/atrac/guide/) and a
+[browser demo](https://atrac-demo.stoatworks-labs.com), which is a port to a
+web page rather than the plugin: the shaders run in WebGL2 and the tables, the
+disc and the clock are rewritten in JavaScript; it has no audio, and it says so.
 
 ## Build
 

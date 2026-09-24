@@ -183,6 +183,24 @@ one texel, so a cell and channel take two, and the alloc pass runs twice per cel
 (once per half) rather than through a multi-target framebuffer. 2× a small
 computation.
 
+### MSVC has no `M_PI`
+
+The first Windows CI run failed on `M_PI` in `Codec.cpp`: MSVC's `<cmath>` defines it
+only under `_USE_MATH_DEFINES`, and clang on the Mac never notices. The constant is
+spelled out once as `kPi`. Nothing on this Mac would have found it; only CI did.
+
+### What filming it found (2026-09-24)
+
+The project video was rendered through `actest --pipe` over Resolume's demo clips
+before the guide's numbers were fixed, and the survey settled three things the harness
+cannot: **a starved cell falls to mid grey, not black** (Y is centred on zero and the
+MLT has no compact DC, so a cell whose bands are all zeroed decodes to Y = 0 -- at
+0.1 bpp a dark clip with a bright object becomes grey blocks); **Show Bits was nearly
+black at the default rate** (most bands at 2 bits; the heat map's low end was lifted);
+and **pre-echo on thin bright lines needs about a bit per pixel** before the halo shows
+-- at a quarter of a bit the line itself starves to a dim trace and the halo is lost in
+it. The defaults survived the survey unchanged.
+
 ### "Knock Sensitivity" is seventeen characters
 
 `--names` failed on it. The name field a host reads is not null-terminated and
@@ -320,9 +338,14 @@ Reverted with `git checkout source/Shaders.cpp`; the tree was clean before and a
 - **Show Bits paints the luma allocation** per cell as its own coefficient plane.
 - **`--fail-render-at N`** is a harness-only hook so `verify.sh` can prove `--pipe`
   exits 1 on a failed render.
-- **Provisional About and attributions** (`StoatworksAbout.h`, `ATTRIBUTIONS.md`) are
-  hand copies adapted from clamp's with `guide=""`; the button count, and so the
-  parameter count, does not change when the fleet's sync regenerates them.
+- **About and attributions are generated** (`StoatworksAbout.h` by sync-about.py,
+  `ATTRIBUTIONS.md` by sync-attributions.py) since the project was registered on
+  2026-09-24. The guide URL added the User guide button, so the parameter count went
+  from 18 to 19 before the first tag; verify.sh was re-run on it.
+- **Show Bits' heat map starts at a readable blue** (0.10, 0.16, 0.62) rather than the
+  near-black it had, because the video survey over Resolume's demo clips found that at
+  the default rate almost every band is at 2 bits and the view was black. Display only;
+  nothing measured reads it.
 - **The FFGL submodule was dissociated from the reference clone** (`repack -a -d`, the
   alternates file removed) so this repo does not depend on a path in `~/Projects`.
 
@@ -390,10 +413,8 @@ build, at 320×180 and 1280×720, with the same checks passing at 333×187 by ha
   plugin has not.
 - **Windows compiles in CI only**; nothing has run it in a host.
 - **Not verified at 4K**, only benchmarked there; the tdac bound is loose there (about 0.2 in l2).
-- **No OpenFX port, no browser demo, no factory presets, no user guide.** Not required
-  for 0.1.0.
-- **`StoatworksAbout.h` and `ATTRIBUTIONS.md` are provisional hand copies** with
-  `guide=""`; register the project and re-run the syncs before the first release.
+- **No OpenFX port, no factory presets.** There is a user guide (`docs/USER-GUIDE.md`,
+  the site page and PDF are built from it) and a browser demo (`demo/`, see below).
 - **Nothing has been through a show.**
 
 ---
@@ -417,6 +438,29 @@ build, at 320×180 and 1280×720, with the same checks passing at 333×187 by ha
   disc is not), arguably odd.
 
 ---
+
+## The browser demo
+
+`demo/` is the page at atrac-demo.stoatworks-labs.com, built on the fleet's demo kit
+(`demo/vendor/`, vendored by stoatworks-backend's `resolume-demo/sync.sh`; never edit
+it). Two halves, not equally faithful:
+
+- **The shaders are the plugin's.** `demo/plugin.js` carries all twenty GLSL snippets of
+  `Shaders.cpp` verbatim (one backtick in a comment escaped) and joins them into the ten
+  programs exactly as `Shaders.cpp` does. `demo/tools/check_shaders.py` compares every
+  snippet character for character AND every join, and `tools/verify.sh` runs it.
+- **The CPU half is a port.** `Codec.cpp`'s tables, `Disc.cpp`'s buffer and detector,
+  `Clock.cpp` (unit declared as seconds) and `ProcessOpenGL`'s frame sequence are
+  rewritten in JavaScript. Nothing checks a port but a reader.
+- **No audio reaches the page.** The Audio buffer is absent; Sensitivity is present and
+  does nothing (the detector is handed silence); Knock is a toggle the page releases
+  after one frame, one rising edge. The page says all of this in its banner and its
+  disclosure.
+- The Worker is a **route** (`wrangler.toml`) behind a proxied `AAAA 100::` record made
+  through the API on 2026-09-24, because stoatworks-labs.com is at Cloudflare's limit of
+  100 Workers custom domains. Delete the record and the page goes dark on a green deploy.
+  `deploy.yml` redeploys on every push to main; the live `<head>` check must say
+  "serving this build".
 
 ## Siblings
 
