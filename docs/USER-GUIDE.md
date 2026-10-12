@@ -1,23 +1,25 @@
 # Atrac user guide
 
-Atrac is **a perceptual coder modelled on MiniDisc's ATRAC, run on the picture, for
-[Resolume](https://resolume.com) Arena and Avenue**, as an FFGL effect. It does not paint blocks
-or noise onto a clip. It cuts the picture into overlapping blocks, puts each through a lapped
+Atrac is an FFGL effect for [Resolume](https://resolume.com) Arena and Avenue that runs a
+perceptual coder modelled on MiniDisc's ATRAC on the picture: a fixed budget of bits per block,
+shared out by a masking model, with a shock-proof buffer on top that a knock can empty.
+
+Nothing's painted on. It cuts the picture into overlapping blocks, puts each through a lapped
 transform, groups the coefficients into bands with a scale factor and a word length each, and
-shares a **fixed budget of bits per block** out by a masking model. Fine texture goes first, hard
-edges ring one block either side, the allocation shimmers from frame to frame, and a cell that
-runs out of bits falls to grey. On top sits the disc: a shock-proof buffer that a knock drains,
-and when it empties the picture holds. None of it is drawn; it all falls out of the one coder.
+shares the budget out. Fine texture goes first, hard edges ring one block either side, the
+allocation shimmers from frame to frame, and a cell that runs out of bits falls to grey. On top
+sits the disc: a shock-proof buffer that a knock drains, and when it empties, the picture holds.
+It all falls out of the one coder.
 
 ![The test card through the coder at half a bit per pixel: colour bars with a faint block ripple, a grey ramp, a dark block whose edges ring, and a textured field reduced to its coarse structure](hero.png)
 
 *The repo's test card through the plugin at its defaults, rendered by the offline harness rather
 than captured from Resolume: half a bit per pixel on 16-pixel blocks, adaptive switching, a
-moderate masking model. The texture at the bottom has lost its grain to the budget; the dark
-block's edges ring; the flat bars carry a faint block ripple.*
+moderate masking model. The texture at the bottom has lost its grain to the budget, the dark
+block's edges ring, and the flat bars carry a faint block ripple.*
 
-> **Before you rely on this:** released at **v0.1.0**, and honestly early. The coder is measured
-> rather than asserted, by a harness that drives the real plugin class and reads each claim back
+> **Before you rely on this:** released at **v0.1.0**, and still early days. The coder is measured
+> rather than asserted, by a harness that drives the plugin's own class and reads each claim back
 > out of the picture it made, or out of the allocation texture the plugin's own shader wrote: at
 > unlimited bits the lapped transform returns the input within a rounding bound derived from the
 > arithmetic, through long, short and mixed blocks, at 0.3% of that bound; every cell spends at
@@ -25,11 +27,14 @@ block's edges ring; the flat bars carry a faint block ripple.*
 > reaches exactly one block before the edge in Long mode and within three eighths of a cell in
 > Short; SNR rises strictly with Bit Rate, 19.4 to 35.6 dB over five doublings; a band beside a
 > louder one is zeroed with Masking on and coded with it off; and a knock breaks playback exactly
-> when it outlasts the buffer, resuming on the closed form. Twelve deliberate faults are shown to
-> make those checks fail, and one character changed in the shipped shader is caught. All 13
-> controls are shown to change the picture. It has **never been loaded into Resolume on macOS** —
-> the one host it has run in is the fleet's own test host, `oxbow`, for 120 frames.
-> On Windows, a build of v0.1.0 loads, registers and renders in Resolume Arena 7.27.1, with every control matching what the plugin declares — on software rendering, so that says nothing about a GPU. Buffer, Read Speed and Knock Length could not be shown moving there, because they act only during a knock and the gate never presses the button; the harness measures all three.
+> when it outlasts the buffer, resuming on the closed form. Twelve faults put in on purpose are
+> shown to make those checks fail, and one character changed in the shipped shader is caught. All
+> 13 controls are shown to change the picture. It's **never been loaded into Resolume on macOS**.
+> The one host it's run in is the fleet's own test host, `oxbow`, for 120 frames.
+> On Windows, a build of v0.1.0 loads, registers and renders in Resolume Arena 7.27.1, with every
+> control matching what the plugin declares. That was on software rendering, so it says nothing
+> about a GPU. Buffer, Read Speed and Knock Length couldn't be shown moving there, because they
+> only act during a knock and the gate never presses the button; the harness measures all three.
 > Try it on a spare layer before you put it in a show.
 >
 > ATRAC and MiniDisc are trademarks of Sony Group Corporation. This project is modelled on the
@@ -49,35 +54,35 @@ macOS    ~/Documents/Resolume Arena/Extra Effects/
 Windows  %USERPROFILE%\Documents\Resolume Arena\Extra Effects\
 ```
 
-Avenue uses the same layout under its own folder name. The effect then appears in the effects
+Avenue uses the same layout under its own folder name. The effect then shows up in the effects
 browser as **SW Atrac**.
 
-The macOS download is a universal build (Apple silicon and Intel), as a `.dmg` or a `.zip`. It is
-**Developer ID-signed and notarised**, so the bundle simply loads. The
-Windows download is an x64 installer or a `.zip`. It is not code-signed, so the installer trips
-SmartScreen once: **More info** → **Run anyway**.
+The macOS download is a universal build (Apple silicon and Intel), as a `.dmg` or a `.zip`. It's
+**Developer ID-signed and notarised**, so the bundle just loads. The Windows download is an x64
+installer or a `.zip`. It isn't code-signed, so the installer trips SmartScreen once:
+**More info** → **Run anyway**.
 
 ---
 
 ## Detail goes by bits, not by resolution
 
 Most things that make a picture look "compressed" throw away resolution: fewer pixels, softer
-edges. ATRAC, the coder inside MiniDisc, did something else. It cut the sound into overlapping
-blocks, put each through a **modified discrete cosine transform** — the lapped transform whose
-overlapping halves cancel each other's aliasing — grouped the coefficients into **block floating
-units**, each with a scale factor and a word length, and handed out a **fixed budget of bits per
-block**, always the same, by a masking model: a band next to a loud band is masked, and gets few
-bits or none.
+edges. ATRAC, the coder inside MiniDisc (the format that was going to replace the cassette any
+day now), did something else. It cut the sound into overlapping blocks, put each through a
+**modified discrete cosine transform** (the lapped transform whose overlapping halves cancel each
+other's aliasing), grouped the coefficients into **block floating units**, each with a scale
+factor and a word length, and handed out a **fixed budget of bits per block**, always the same,
+by a masking model: a band next to a loud band is masked, and gets few bits or none.
 
 Atrac runs that coder on the picture. The frame is cut into N × N cells; along each axis a cell
 is one lapped block, or four short ones; the coefficients are grouped into bands by diagonal; a
 budget of bits per cell is spent by a greedy on noise-to-mask ratio; and the coefficients are
-quantised, dequantised and transformed back. Everything you see is a consequence of that:
+quantised, dequantised and transformed back. Everything you see comes from that:
 
 - **Fine texture goes first.** The high bands of a busy cell are at the bottom of the queue and
   get zero bits. Flat cells have bits to spare, busy ones starve, because the budget is fixed.
 - **A starved cell falls to grey.** Luma is coded centred on zero, and a lapped transform has no
-  compact DC — a flat field is not one coefficient — so a cell whose bands are all zeroed decodes
+  compact DC (a flat field isn't one coefficient), so a cell whose bands are all zeroed decodes
   to mid grey, not black. At low rates a dark clip with a bright object turns into grey blocks
   where the object's cells ran out of bits.
 - **Pre-echo.** Quantisation noise is a sum of basis functions over the whole window, so a hard
@@ -126,7 +131,7 @@ each position stands for is given with each control below.
 **Bit Rate** — bits per pixel, from **0.05 to 4** on a logarithmic slider; **0.5 at the default
 of 0.525**. The budget for a cell is the rate times its area, floor(bpp × N²), for luma, and
 that times Chroma Bits for each of Cb and Cr. On MiniDisc the budget was 212 bytes a sound unit,
-always; here it is this control, always.
+always; here it's this control, always.
 
 | Slider | bits per pixel | what a 16-pixel cell gets | what it looks like |
 | --- | --- | --- | --- |
@@ -140,13 +145,13 @@ always; here it is this control, always.
 **Block Size** — **8, 16 or 32** pixels; 16 by default. The cell is N × N, and a bigger cell
 spreads its budget over more coefficients: smoother inside, but the ringing is wider and a
 starved cell is a bigger grey square. At 8 the artefacts are fine-grained and the swirl is busy;
-at 32 they are broad and the render cost is three times the default.
+at 32 they're broad and the render cost is three times the default.
 
 **Block Mode** — **Long**, **Short** or **Adaptive**; Adaptive by default. Long is one block of N
 along each axis of the cell; Short is four blocks of N/4 along each axis, sixteen sub-blocks,
 whose bands are the union over the sixteen. Adaptive looks inside each cell at the energy of its
 first differences: if one half of the cell has eight times the other's, along x or along y, the
-cell is short. The switch is exact — the overlap at every block boundary is the smaller of the
+cell is short. The switch is exact: the overlap at every block boundary is the smaller of the
 two blocks meeting there, so a short block beside a long one reconstructs perfectly with no
 transition windows. Only the cell itself is looked at; a cell's mode never depends on its
 neighbours.
@@ -155,7 +160,7 @@ neighbours.
 from **60 dB below it at 0 to level with it at 1**; **0.6 by default, 24 dB below**. Each band's
 threshold is the largest contribution from any other band, spread by 10 dB a band upward and
 24 dB a band downward, less this offset, and floored at half an 8-bit code squared. A band
-below its threshold is not thrown away: it goes to the back of the queue, and on a short budget
+below its threshold isn't thrown away: it goes to the back of the queue, and on a short budget
 is never reached. At 1, a band beside a loud one gets nothing until every louder band has been
 driven below it; at 0, the model is nearly flat and bits go by energy. The difference is
 subtle on most footage; the harness proves it on a planted pair of tones.
@@ -169,7 +174,7 @@ is coded as BT.601 luma and colour difference, with luma centred on zero.
 ## The Disc group
 
 The shock-proof buffer, and what knocks it. Everything here is seconds and a multiplier, in
-double precision on the CPU, on the host's clock — so a knock lasts the same time at 30 fps and
+double precision on the CPU, on the host's clock, so a knock lasts the same time at 30 fps and
 at 60.
 
 **Buffer** — how many seconds of playback the buffer holds when full, **0 to 10 s**; **2 s by
@@ -181,11 +186,11 @@ of the way). Playing and reading, the buffer gains Read Speed − 1 seconds a se
 nothing plays, so it fills at the full Read Speed.
 
 **Sensitivity** — the onset detector's threshold on the **Audio** input, **0 to 1**; **0.5 by
-default**. An onset is a rise in the spectrum — the positive change in each of Resolume's 64 FFT
-bins since the last frame, summed over all of them — against a running mean of itself (one second)
+default**. An onset is a rise in the spectrum (the positive change in each of Resolume's 64 FFT
+bins since the last frame, summed over all of them) against a running mean of itself (one second)
 times a margin, from 2.5× at low sensitivity to 0.15× at high, with an absolute floor and an 80 ms
 refractory period. **At 0 nothing ever knocks.** The detector is primed on the first frame, so
-triggering a clip on a loud passage does not knock the disc.
+triggering a clip on a loud passage doesn't knock the disc.
 
 **Knock Length** — how long a knock stops the read, **50 ms to 5 s** on a logarithmic slider;
 **0.5 s by default**. A knock during a knock extends it.
@@ -197,7 +202,7 @@ detector hears silence.
 
 **What happens on a knock.** The read stops for Knock Length while playback keeps draining the
 buffer at 1×. If the buffer still has something in it when the read comes back, nothing shows:
-the buffer simply refills. If it empties first, playback **breaks**: the picture holds the last
+the buffer just refills. If it empties first, playback **breaks**: the picture holds the last
 decoded frame. While broken the read fills the buffer at Read Speed once the knock is over, and
 playback resumes when it has a quarter of a Buffer in hand. In numbers: a knock of L on a full
 buffer of B breaks playback iff L > B, at B after the knock, and resumes at L + (B/4)/r after it.
@@ -205,7 +210,7 @@ At the defaults, a 3 s knock holds the picture from 2 s to 3.25 s. The harness m
 times out of the picture to within one frame.
 
 While the picture is held nothing is decoded, so the hold is free. A change of resolution during a
-hold scales the held picture; it does not clear it.
+hold scales the held picture; it doesn't clear it.
 
 ---
 
@@ -213,7 +218,7 @@ hold scales the held picture; it does not clear it.
 
 **Show Blocks** — off by default. Draws the cell grid in cyan, tints the cells that are coded
 short orange, and draws their sub-block grid. At Block Size 8 the grid is a mesh over the whole
-picture; it is most useful at 16 and 32.
+picture; it's most useful at 16 and 32.
 
 **Show Bits** — off by default. Paints every cell as if it were its own coefficient plane: the
 pixel at (i, j) of the cell shows the word length of the band that coefficient (i, j) of the
@@ -242,9 +247,9 @@ Once a frame, on the GPU except where it says:
    picture's edge; the basis and the ramps are computed on the CPU in double and handed over as
    tables.
 5. **Allocate.** Per cell and channel: the bands' energies and peaks, the masked thresholds, the
-   greedy — the band with the highest noise-to-mask ratio takes the next increment (2 bits first,
-   then 1 at a time, each dividing its ratio by 16 and then 4) until nothing fits — and the scale
-   factor of each band, the smallest of ATRAC1's 64 (2.007 dB steps) not below its peak.
+   greedy, in which the band with the highest noise-to-mask ratio takes the next increment (2 bits
+   first, then 1 at a time, each dividing its ratio by 16 and then 4) until nothing fits; and the
+   scale factor of each band, the smallest of ATRAC1's 64 (2.007 dB steps) not below its peak.
 6. **Quantise.** Each coefficient to a signed integer of its band's word length, symmetric,
    scaled by its scale factor, and back. Word length 0 zeroes it.
 7. **Inverse transform**, along y then x, overlap-added, back to RGB, into the held picture.
@@ -266,16 +271,16 @@ Measured by the offline harness on an M4 Max, best of three runs of 60 frames af
 | 1920×1080 | 4.9 ms | 30% | 3.0 ms | 15.1 ms |
 | 3840×2160 | 16.1 ms | 97% | 10.0 ms | 30.4 ms |
 
-**It is not cheap, and 4K is the edge.** Each pixel costs 2N taps in each of four lapped passes,
+**It isn't cheap, and 4K is the edge.** Each pixel costs 2N taps in each of four lapped passes,
 each tap two texel fetches, so the cost is linear in Block Size and in area. At 4K on the default
-blocks that is a whole 60 fps frame on this GPU, and at Block Size 32 it is two. The buffers are
+blocks that's a whole 60 fps frame on this GPU, and at Block Size 32 it's two. The buffers are
 five RGBA float planes the size of the picture or its padded plane: about **165 MB of GPU memory
-at 1080p and 660 MB at 4K**. Nothing has been optimised yet — the basis could be a packed uniform
+at 1080p and 660 MB at 4K**. I haven't optimised anything yet: the basis could be a packed uniform
 array rather than a texture, the allocation pass could write both halves at once, and the
 picture buffers could be half-float. For a 4K composition, run it at Block Size 8, or on a layer
 rendered at 1080p. Nothing was timed inside Resolume, and nothing was timed on Windows.
 
-While the disc is broken the coder does not run, so a held picture costs nothing.
+While the disc is broken the coder doesn't run, so a held picture costs nothing.
 
 ---
 
@@ -284,7 +289,7 @@ While the disc is broken the coder does not run, so a held picture costs nothing
 **Nothing seems to happen.** Bit Rate is high, or Mix is low. At 2 bits per pixel and above the
 coder is close to transparent on most footage; bring Bit Rate down to the default or below.
 
-**Grey squares where the picture is dark.** That is the effect at a low rate: a cell whose bands
+**Grey squares where the picture is dark.** That's the effect at a low rate: a cell whose bands
 all got zero bits decodes to mid grey, because luma is coded centred on zero. Raise Bit Rate,
 or lower Block Size so the grey squares are smaller.
 
@@ -299,7 +304,7 @@ heat map. Raise Bit Rate, or lower Block Size.
 
 **Show Blocks is a mesh over everything.** Block Size is 8. The grid is one line every 8 pixels.
 
-**The picture froze and does not come back.** A knock is still running (a long Knock Length, or
+**The picture froze and doesn't come back.** A knock is still running (a long Knock Length, or
 an onset every frame extending it), or Buffer is 0, so the disc can never get a quarter of a
 buffer in hand. Turn Sensitivity to 0 and Buffer up.
 
@@ -308,17 +313,17 @@ detector is primed on the first frame, but a real onset on the second frame is a
 Lower Sensitivity or shorten Knock Length.
 
 **Knock does nothing.** At the defaults a half-second knock on a two-second buffer never empties
-it: that is the buffer working. Lengthen Knock Length past Buffer, or shorten Buffer.
+it: that's the buffer working. Lengthen Knock Length past Buffer, or shorten Buffer.
 
 **Audio does nothing.** Nothing is routed to the Audio input, or Sensitivity is 0.
 
-**It is slow at 4K.** See Performance. Block Size 8, or a smaller layer.
+**It's slow at 4K.** See Performance. Block Size 8, or a smaller layer.
 
-**SW Atrac is not in the effects browser.** Check the folder under Installing, and that Resolume
+**SW Atrac isn't in the effects browser.** Check the folder under Installing, and that Resolume
 was restarted.
 
-**The effect does nothing at all.** A shader that will not compile looks exactly like that, and
-the real message is in the log:
+**The effect does nothing at all.** That's what a shader that won't compile looks like, and the
+actual error is in the log:
 
 ```
 macOS    ~/Library/Logs/atrac/atrac.YYYY-MM-DD.log
@@ -326,8 +331,8 @@ Windows  %LOCALAPPDATA%\atrac\logs\atrac.YYYY-MM-DD.log
 ```
 
 It records the build that was loaded, the GL vendor, renderer and version at load, which shader
-failed if one did, a buffer that could not be allocated, when the first non-zero spectrum arrived
-on the Audio input, and at frame 60 the host's clock and the unit the plugin decided it is in.
+failed if one did, a buffer that couldn't be allocated, when the first non-zero spectrum arrived
+on the Audio input, and at frame 60 the host's clock and the unit the plugin decided it's in.
 
 ---
 
@@ -335,13 +340,13 @@ on the Audio input, and at frame 60 the host's clock and the unit the plugin dec
 
 - **Never loaded into Resolume on macOS**, and nothing has driven the controls in a host there.
   How the fourteen controls read in the inspector is untested.
-- **What Resolume puts in its 64 FFT bins is unmeasured** — magnitudes or powers, and how they
-  are laid out. The detector sums over every bin so the layout does not matter to it; the square
+- **What Resolume puts in its 64 FFT bins is unmeasured**: magnitudes or powers, and how they're
+  laid out. The detector sums over every bin, so the layout doesn't matter to it; the square
   root of each is an assumption inherited from the rest of the fleet.
 - **The masking model is stated, not tuned.** Its slopes and offset are defensible numbers from
   the psychoacoustic shape; nothing has been looked at against a reference.
-- **A flat field is not one coefficient**, so flat areas ripple until the rate is high. That is
-  the transform the plugin set out to be, and it is why the swirl shows where nothing moves.
+- **A flat field isn't one coefficient**, so flat areas ripple until the rate is high. That's
+  the transform the plugin set out to be, and it's why the swirl shows where nothing moves.
 - **Side information is free.** MiniDisc's budget included the word lengths and scale factors;
   here the budget is coefficient bits only.
 - **The transient detector looks inside the cell only**, and its decision is local. ATRAC1's
@@ -352,21 +357,22 @@ on the Audio input, and at frame 60 the host's clock and the unit the plugin dec
 - **Checked at up to 1280×720 and 333×187**, and only timed at 4K.
 - **Only ever run on an Apple M4 Max**, although the macOS build contains an Intel slice.
 - **No presets** and no OpenFX version.
-- **There is a browser demo** at [atrac-demo.stoatworks-labs.com](https://atrac-demo.stoatworks-labs.com).
-  It is a port to a web page, not the plugin: the shaders run in WebGL2 and the CPU half — the
-  tables, the disc and the clock — is rewritten in JavaScript. It has no audio. The page lists what
-  it does not reproduce.
+- **There's a browser demo** at [atrac-demo.stoatworks-labs.com](https://atrac-demo.stoatworks-labs.com).
+  It's a port to a web page rather than the plugin: the shaders run in WebGL2 and the CPU half (the
+  tables, the disc and the clock) is rewritten in JavaScript. It has no audio. The page lists what
+  it doesn't reproduce.
 
 ---
 
 ## About
 
-The last group, **About**, carries the plugin's name, version, licence and maker, and buttons
+The last group, **About**, has the plugin's name, version, licence and maker, and buttons
 that open this user guide ([stoatworks-labs.com/software/atrac/guide/](https://stoatworks-labs.com/software/atrac/guide/)),
 the project page, the source on GitHub and the support page in your browser.
 
 ## Reporting something
 
+If something's wrong, shout at
 [github.com/stoatworks-labs/atrac/issues](https://github.com/stoatworks-labs/atrac/issues).
 A screenshot, the Bit Rate, Block Size and Block Mode settings, and the composition's resolution
 and frame rate are usually enough; for a disc problem, Buffer, Read Speed, Knock Length and

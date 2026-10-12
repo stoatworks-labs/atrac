@@ -1,31 +1,25 @@
 # atrac
 
 > **AI-assisted project.** This codebase was created with [Claude](https://claude.com/claude-code)
-> (Anthropic), directed and reviewed by a human author. The coder is not
-> asserted but measured: an offline harness drives the real plugin class in a
-> headless GL context and reads each claim back out of the picture it made or
-> out of the allocation texture the plugin's own shader wrote — at unlimited
-> bits the lapped transform returns the input within a rounding bound derived
-> from the arithmetic, through long, short and mixed blocks; every block
-> spends at most its budget and wastes less than one increment; a step's
-> quantisation noise reaches exactly one block before the edge in Long mode
-> and three eighths of a cell in Short; SNR rises with Bit Rate; a band
-> beside a louder one is zeroed with Masking on and coded with it off; a
-> knock breaks playback exactly when it outlasts the buffer and playback
-> resumes on the closed form — with twelve negative controls that prove each
-> check can fail. It has **never been loaded into Resolume**. It is loaded by
-> [oxbow](https://github.com/stoatworks-labs/oxbow), which is a real FFGL host
-> and is not Resolume. See [Status](#status).
+> (Anthropic), directed and reviewed by a human author. The coder is measured
+> rather than asserted, by an offline harness that drives the plugin's own class in
+> a headless GL context and reads each claim back out of the picture it made, or out
+> of the allocation texture the plugin's own shader wrote, with twelve negative
+> controls that prove each check can fail. It's **never been loaded into Resolume**.
+> It's loaded by [oxbow](https://github.com/stoatworks-labs/oxbow), which is a proper
+> FFGL host but isn't Resolume. The full rundown is under [Status](#status).
 
-MiniDisc's perceptual coder, run on the picture, as an FFGL effect for
-[Resolume](https://resolume.com) Arena and Avenue.
+MiniDisc's perceptual coder, run on the picture instead of the sound, as an FFGL effect
+for [Resolume](https://resolume.com) Arena and Avenue. Your clip gets a fixed bit budget
+per block and a masking model that decides what you won't miss. And, like the portable
+players, it skips if you knock it for longer than its buffer can cover.
 
 ![The test card through the coder at half a bit per pixel: colour bars with a faint block ripple, a grey ramp, a dark block whose edges ring, and a textured field reduced to its coarse structure](docs/hero.png)
 
-<sub>One frame, rendered by `actest`, the offline harness — not captured from
-Resolume. The defaults: 0.5 bits per pixel on 16-pixel blocks, adaptive
-switching, a moderate masking model. The texture at the bottom has lost its
-grain to the budget; the dark block's edges ring.</sub>
+<sub>One frame, rendered by `actest` (the offline harness) rather than captured from
+Resolume. It's the defaults: 0.5 bits per pixel on 16-pixel blocks, adaptive
+switching and a moderate masking model. The texture at the bottom has lost its
+grain to the budget, and the dark block's edges ring.</sub>
 
 <!-- downloads:start -->
 
@@ -61,18 +55,18 @@ macOS builds are signed and notarised and open normally. The Windows builds are 
 
 ## The one idea
 
-ATRAC does not throw detail away by resolution. It throws it away by **bits**.
+ATRAC throws detail away by **bits**, not by resolution.
 
-The signal is cut into overlapping blocks. Each goes through an MDCT — the
-lapped transform whose overlapping halves cancel each other's aliasing. The
+The signal is cut into overlapping blocks, and each goes through an MDCT (the
+lapped transform whose overlapping halves cancel each other's aliasing). The
 coefficients are grouped into block floating units, each with a scale factor
-and a word length. And **a fixed bit budget per block** — on MiniDisc, 212
-bytes, always — is shared out by a masking model: a band next to a loud band is
-masked and gets few bits or none.
+and a word length. Then **a fixed bit budget per block** (212 bytes on MiniDisc,
+always) is shared out by a masking model: a band next to a loud band is masked
+and gets few bits or none.
 
 Here the same coder runs on the picture, as a separable 2-D lapped transform
-with a fixed budget per block. Every artefact is a consequence of that budget
-and that transform, and none of it is drawn:
+with a fixed budget per block. Every artefact comes from that budget and that
+transform, and none of it is drawn on:
 
 - **Fine texture goes first.** High bands in a busy block fall to the bottom of
   the queue and get zero bits. Flat blocks get more bits than they need and busy
@@ -84,7 +78,7 @@ and that transform, and none of it is drawn:
   appear and vanish, and quantised texture shimmers at low rates.
 - **The skip.** A MiniDisc reads the disc faster than it plays into a
   shock-proof buffer. A knock stops the read, the buffer drains, and only if it
-  empties does playback break. An audio onset — or the `Knock` button — is the
+  empties does playback break. An audio onset (or the `Knock` button) is the
   knock; when the buffer empties the picture holds until it has refilled.
 
 ![Show Bits: every cell painted with its own allocation, the DC corner bright, the diagonal bands fading toward zero](docs/show-bits.png)
@@ -97,32 +91,32 @@ across many bands; the flat bars at the top pour them into the first few.</sub>
 
 - **Block switching is exact.** The overlap at every block boundary is the
   smaller of the two blocks meeting there, so a short block beside a long one
-  reconstructs perfectly with no transition windows — the harness proves it
+  reconstructs perfectly with no transition windows, and the harness proves it
   through mixed long/short pictures to within 1% of a derived rounding bound.
-- **A flat field is not one coefficient.** An MLT has no compact DC basis: a
+- **A flat field isn't one coefficient.** An MLT has no compact DC basis: a
   constant projects onto every band, the zig-zag BFU shares each axis
   coefficient with the block's interior, and the scale factor is the loud one's.
-  So flat areas keep a faint block ripple until the rate is high. That is the
-  transform, not a bug, and it is why the swirl is visible even where nothing
+  So flat areas keep a faint block ripple until the rate is high. That's the
+  transform, not a bug, and it's why the swirl is visible even where nothing
   moves.
 - **Chroma is coded as Cb and Cr at a fraction of the luma budget**
   (`Chroma Bits`), like joint coding; at zero the picture goes grey.
 - **The disc's arithmetic is exact.** Buffer, read speed and knock length are
   seconds and a multiplier in double on the CPU; a knock of L on a full buffer
   of B breaks playback iff L > B, at B after the knock, and playback resumes at
-  L + (B/4)/r — the harness measures both out of the picture.
+  L + (B/4)/r; the harness measures both out of the picture.
 
 [![Atrac — a MiniDisc-style perceptual coder run on the picture, for Resolume](docs/video-thumb.png)](https://www.youtube.com/watch?v=AKqH_9a7YPo)
 
-*[Watch it](https://www.youtube.com/watch?v=AKqH_9a7YPo) — 55 seconds:
+*[Watch it](https://www.youtube.com/watch?v=AKqH_9a7YPo) (55 seconds):
 texture starving and cells falling to grey as the rate drops, pre-echo on long
 blocks and short blocks confining it, Block Size 8/16/32, Show Bits filling
 outward as the budget grows, Chroma Bits to zero and back, a knock that the
 buffer absorbs and one that empties it, and the disc skipping on the beat.
-Every frame is the real plugin's output: an FFGL plugin has no window, so the
-footage is rendered by this repository's own offline harness (`actest --pipe`,
-driven by a cue sheet) rather than filmed off a screen, and the clips are
-Resolume's bundled demo media.*
+It's all the plugin's own output. An FFGL plugin doesn't have a window to film,
+so the footage comes from this repo's offline harness (`actest --pipe`, driven
+by a cue sheet) rather than a screen recording, and the clips are Resolume's
+bundled demo media.*
 
 ## Controls
 
@@ -138,14 +132,13 @@ Show Blocks says which it chose.
 
 ## Status
 
-**v0.1.0, and honestly early — 24 September 2026.**
+**v0.1.0, released 24 September 2026. Still early days.**
 
 ### Measured offline, on macOS
 
-`tools/verify.sh` passes on this machine (M4 Max, macOS 26.4.1) against a fresh
-universal Release build, running every rendered check at **two rasters**,
-320×180 and 1280×720; the same checks also pass at 333×187. What it
-establishes:
+`tools/verify.sh` passes on this Mac (M4 Max, macOS 26.4.1) against a fresh
+universal Release build. It runs every rendered check at two rasters, 320×180
+and 1280×720, and the same checks also pass at 333×187. Here's what it shows:
 
 | check | result |
 | --- | --- |
@@ -164,32 +157,43 @@ establishes:
 | `--pipe` | 2.5 frames in, exactly 2 out; an unknown cue refused (2); a failed render and a closed stdout each exit 1 |
 | the bundle | universal (`x86_64 arm64`), exports `plugMain`, ad-hoc signs; `oxbow` reports `SW Atrac` / `AC01` / `effect` and renders 120 frames through `plugMain` |
 
-Render cost, best of three runs of 60 frames after a warm-up, `glFinish` both
-sides, on a GPU shared with other builds: **3.2 ms** at 720p, **4.9 ms** at
-1080p, **16.1 ms** at 4K with the default 16-pixel blocks (1.4 / 3.0 / 10.0 ms
-at 8, 7.2 / 15.1 / 30.4 ms at 32). Each pixel costs 2N taps in each of four
-lapped passes; at 4K on 16-pixel blocks that is a whole 60 fps frame, and
-nothing has been optimised yet. macOS figures only.
+Render cost with the default 16-pixel blocks is **3.2 ms** at 720p, **4.9 ms** at
+1080p and **16.1 ms** at 4K (1.4 / 3.0 / 10.0 ms at 8, 7.2 / 15.1 / 30.4 ms at 32),
+best of three runs of 60 frames after a warm-up, `glFinish` both sides, on a GPU
+shared with other builds. Each pixel costs 2N taps in each of four lapped passes,
+so at 4K on 16-pixel blocks that's a whole 60 fps frame, and I haven't optimised
+anything yet. These are macOS figures only.
 
 ### Not established
 
-It has **never been loaded into Resolume**. Everything above was compiled,
-rendered and measured offline against the real plugin class in a headless CGL
-context, plus an `oxbow` load. How it looks on footage, how fourteen controls
-read in Arena's inspector, and what Resolume's 64 FFT bins actually carry — the
-onset detector sums flux over every bin so it does not care how they are laid
-out in frequency, but whether they are magnitudes or powers is unmeasured and
-the square root of each is an assumption inherited from the fleet — are
-untested. The masking model's slopes and offset are stated, not tuned against
-anything. On Windows it has been loaded: a build of this source loads, registers and renders in Resolume Arena 7.27.1 on software rendering (win-lab, Mesa llvmpipe, no GPU), with all 20 host controls as declared and 9 of them shown moving the picture; Buffer, Read Speed and Knock Length could not be shown there, because they act only during a knock and the gate never presses the button, and the two audio controls were skipped because that machine has no sound device. The first build failed there: `packed` is a reserved word in GLSL 4.10 and the alloc shader would not compile on Mesa, which nothing on this Mac had caught. No OpenFX port and no presets. There is a
+It's **never been loaded into Resolume**. Everything above was compiled,
+rendered and measured offline against the plugin's own class in a headless CGL
+context, plus an `oxbow` load. I haven't tested how it looks on footage, how the
+fourteen controls read in Arena's inspector, or what Resolume's 64 FFT bins
+actually carry. The onset detector sums flux over every bin, so it doesn't care
+how they're laid out in frequency, but whether they're magnitudes or powers is
+unmeasured, and taking the square root of each is an assumption inherited from the
+fleet. The masking model's slopes and offset are stated, not tuned against
+anything.
+
+On Windows it has been loaded: a build of this source loads, registers and renders
+in Resolume Arena 7.27.1 on software rendering (win-lab, Mesa llvmpipe, no GPU),
+with all 20 host controls as declared and 9 of them shown moving the picture.
+Buffer, Read Speed and Knock Length couldn't be shown there, because they only act
+during a knock and the gate never presses the button, and the two audio controls
+were skipped because that machine has no sound device. The first build failed
+there: `packed` is a reserved word in GLSL 4.10, so the alloc shader wouldn't
+compile on Mesa, and nothing on this Mac had caught it.
+
+There's no OpenFX port and there are no presets. There's a
 [user guide](https://stoatworks-labs.com/software/atrac/guide/) and a
 [browser demo](https://atrac-demo.stoatworks-labs.com), which is a port to a
 web page rather than the plugin: the shaders run in WebGL2 and the tables, the
-disc and the clock are rewritten in JavaScript; it has no audio, and it says so.
+disc and the clock are rewritten in JavaScript. It has no audio, and it says so.
 
 ## Build
 
-Needs CMake 3.15+, a C++17 compiler, and the FFGL SDK submodule.
+You'll need CMake 3.15+, a C++17 compiler and the FFGL SDK submodule.
 
 ```bash
 git clone --recursive https://github.com/stoatworks-labs/atrac
@@ -204,7 +208,7 @@ macOS builds are universal (Apple Silicon + Intel) by default; add
 
 ## Building and testing
 
-The offline harness renders the real plugin class headlessly, on a synthetic
+The offline harness renders the plugin's own class headless, on a synthetic
 60 fps clock:
 
 ```bash
@@ -219,8 +223,9 @@ python3 tools/sweep.py                                 # no control is silently 
 tools/verify.sh                                        # all of it, on a fresh universal build
 ```
 
-Every check takes `--size`; run it at 320×180 as well as the raster you care about.
-Footage goes through the real shaders with `--pipe`, in the fleet's frame format:
+Every check takes `--size`, so run it at 320×180 as well as whatever raster you care
+about. Footage goes through the plugin's shaders with `--pipe`, in the fleet's frame
+format:
 
 ```bash
 ffmpeg -i in.mov -f rawvideo -pix_fmt rgba - \
