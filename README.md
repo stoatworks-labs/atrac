@@ -5,9 +5,10 @@
 > rather than asserted, by an offline harness that drives the plugin's own class in
 > a headless GL context and reads each claim back out of the picture it made, or out
 > of the allocation texture the plugin's own shader wrote, with twelve negative
-> controls that prove each check can fail. It's **never been loaded into Resolume**.
-> It's loaded by [oxbow](https://github.com/stoatworks-labs/oxbow), which is a proper
-> FFGL host but isn't Resolume. The full rundown is under [Status](#status).
+> controls that prove each check can fail. It's **never been loaded into Resolume on a Mac**.
+> There it's loaded by [oxbow](https://github.com/stoatworks-labs/oxbow), which is a proper
+> FFGL host but isn't Resolume. On Windows it has run in Resolume Arena 7.27.1, on
+> software rendering. The full rundown is under [Status](#status).
 
 MiniDisc's perceptual coder, run on the picture instead of the sound, as an FFGL effect
 for [Resolume](https://resolume.com) Arena and Avenue. Your clip gets a fixed bit budget
@@ -152,7 +153,7 @@ and 1280×720, and the same checks also pass at 333×187. Here's what it shows:
 | `--offline` | the BFU rule, the scale-factor law, the ramps and basis exact; the stated transform reconstructs through long/short mixtures to 8.5e-15 in double; the disc's arithmetic within one frame of the closed form in nine cases; no knock on the first frame of a loud clip, from an origin of 0 s or 40 s |
 | `--negative` | twelve perturbed models — a rectangular window, a budget of 5/4, a greedy that stops early, short blocks that are really long, Bit Rate ignored, masking ignored, a knock that empties the buffer at once, a refill at 1×, a resize that clears the held picture, an unprimed detector — each **fails** its check |
 | mutation | one character of the shipped GLSL (`p = n - M / 2` → `M / 3` in the window) was caught by `--tdac` in all nine combinations and by `--masking`, then reverted |
-| `tools/sweep.py` | all **13** controls measurably change the picture |
+| `tools/sweep.py` | all **13** controls with a value to sweep measurably change the picture (Audio is a spectrum, and the About block's buttons open a browser) |
 | shaders | all 10, as the plugin compiles them, through `glslc` |
 | `--pipe` | 2.5 frames in, exactly 2 out; an unknown cue refused (2); a failed render and a closed stdout each exit 1 |
 | the bundle | universal (`x86_64 arm64`), exports `plugMain`, ad-hoc signs; `oxbow` reports `SW Atrac` / `AC01` / `effect` and renders 120 frames through `plugMain` |
@@ -166,10 +167,11 @@ anything yet. These are macOS figures only.
 
 ### Not established
 
-It's **never been loaded into Resolume**. Everything above was compiled,
+It's **never been loaded into Resolume on a Mac**. Everything above was compiled,
 rendered and measured offline against the plugin's own class in a headless CGL
-context, plus an `oxbow` load. I haven't tested how it looks on footage, how the
-fourteen controls read in Arena's inspector, or what Resolume's 64 FFT bins
+context, plus an `oxbow` load. The only footage it has seen is Resolume's demo
+clips through `actest --pipe`, for the video. I haven't tested how the fourteen
+controls read in Arena's inspector on a Mac, or what Resolume's 64 FFT bins
 actually carry. The onset detector sums flux over every bin, so it doesn't care
 how they're laid out in frequency, but whether they're magnitudes or powers is
 unmeasured, and taking the square root of each is an assumption inherited from the
@@ -178,7 +180,8 @@ anything.
 
 On Windows it has been loaded: a build of this source loads, registers and renders
 in Resolume Arena 7.27.1 on software rendering (win-lab, Mesa llvmpipe, no GPU),
-with all 20 host controls as declared and 9 of them shown moving the picture.
+with all 20 host controls as declared (the fourteen, the About block's five and
+Resolume's own Opacity) and 9 of them shown moving the picture.
 Buffer, Read Speed and Knock Length couldn't be shown there, because they only act
 during a knock and the gate never presses the button, and the two audio controls
 were skipped because that machine has no sound device. The first build failed

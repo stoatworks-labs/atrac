@@ -29,8 +29,9 @@ block's edges ring, and the flat bars carry a faint block ripple.*
 > louder one is zeroed with Masking on and coded with it off; and a knock breaks playback exactly
 > when it outlasts the buffer, resuming on the closed form. Twelve faults put in on purpose are
 > shown to make those checks fail, and one character changed in the shipped shader is caught. All
-> 13 controls are shown to change the picture. It's **never been loaded into Resolume on macOS**.
-> The one host it's run in is the fleet's own test host, `oxbow`, for 120 frames.
+> 13 controls with a value to sweep (every one but Audio) are shown to change the picture. It's
+> **never been loaded into Resolume on macOS**. The one host it's run in there is the fleet's own
+> test host, `oxbow`, for 120 frames.
 > On Windows, a build of v0.1.0 loads, registers and renders in Resolume Arena 7.27.1, with every
 > control matching what the plugin declares. That was on software rendering, so it says nothing
 > about a GPU. Buffer, Read Speed and Knock Length couldn't be shown moving there, because they
@@ -339,7 +340,7 @@ on the Audio input, and at frame 60 the host's clock and the unit the plugin dec
 ## Known limits
 
 - **Never loaded into Resolume on macOS**, and nothing has driven the controls in a host there.
-  How the fourteen controls read in the inspector is untested.
+  How the fourteen controls read in the inspector there is untested.
 - **What Resolume puts in its 64 FFT bins is unmeasured**: magnitudes or powers, and how they're
   laid out. The detector sums over every bin, so the layout doesn't matter to it; the square
   root of each is an assumption inherited from the rest of the fleet.
@@ -355,7 +356,7 @@ on the Audio input, and at frame 60 the host's clock and the unit the plugin dec
 - **Costly at 4K**: a whole 60 fps frame on an M4 Max at the default Block Size, and about 660 MB
   of GPU memory. See Performance.
 - **Checked at up to 1280×720 and 333×187**, and only timed at 4K.
-- **Only ever run on an Apple M4 Max**, although the macOS build contains an Intel slice.
+- **On a Mac, only ever run on an Apple M4 Max**, although the macOS build contains an Intel slice.
 - **No presets** and no OpenFX version.
 - **There's a browser demo** at [atrac-demo.stoatworks-labs.com](https://atrac-demo.stoatworks-labs.com).
   It's a port to a web page rather than the plugin: the shaders run in WebGL2 and the CPU half (the
